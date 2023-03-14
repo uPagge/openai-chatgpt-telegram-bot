@@ -1,0 +1,15 @@
+telegram:
+  bot:
+    username: ${TELEGRAM_BOT_USERNAME}
+    token: ${TELEGRAM_BOT_TOKEN}
+    autoresponder:
+      threads: ${AUTORESPONDER_THREADS:8}
+  proxy:
+    enable: ${PROXY_ENABLE:false}
+    host: ${PROXY_HOST:}
+    port: ${PROXY_PORT:}
+    type: ${PROXY_TYPE:SOCKS5}
+    user: ${PROXY_USERNAME:}
+    password: ${PROXY_PASSWORD:}
+openai:
+  token: ${CHAT_GPT_TOKEN}
