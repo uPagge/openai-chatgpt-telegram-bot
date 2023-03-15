@@ -18,6 +18,11 @@
 
         <openai.api.version>0.0.1</openai.api.version>
         <godfather.version>0.0.53</godfather.version>
+
+        <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-compiler-plugin -->
+        <plugin.maven.compiler.ver>3.10.1</plugin.maven.compiler.ver>
+        <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-release-plugin -->
+        <plugin.maven.release.ver>3.0.0-M7</plugin.maven.release.ver>
     </properties>
 
 
