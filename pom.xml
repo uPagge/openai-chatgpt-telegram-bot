@@ -155,4 +155,19 @@
         </pluginManagement>
     </build>
 
+    <scm>
+        <connection>scm:git:ssh://git@git.struchkov.dev:222/Telegram-Bots/openai-chatgpt-telegram-bot.git</connection>
+        <url>https://git.struchkov.dev/Telegram-Bots/openai-chatgpt-telegram-bot</url>
+        <developerConnection>scm:git:ssh://git@git.struchkov.dev:222/Telegram-Bots/openai-chatgpt-telegram-bot.git</developerConnection>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>uPagge</id>
+            <name>Struchkov Mark</name>
+            <email>mark@struchkov.dev</email>
+            <url>https://mark.struchkov.dev</url>
+        </developer>
+    </developers>
+
 </project>
