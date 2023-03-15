@@ -9,5 +9,6 @@ public class Cmd {
     public static final String PROMPT = "prompt";
     public static final String GPT = "gpt";
     public static final String HELP = "help";
+    public static final String SUPPORT_DEV = "support";
 
 }

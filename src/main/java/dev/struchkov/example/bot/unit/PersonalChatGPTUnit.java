@@ -10,6 +10,7 @@ import dev.struchkov.godfather.simple.domain.BoxAnswer;
 import dev.struchkov.godfather.simple.domain.unit.AnswerText;
 import dev.struchkov.godfather.telegram.domain.ChatAction;
 import dev.struchkov.godfather.telegram.domain.ClientBotCommand;
+import dev.struchkov.godfather.telegram.domain.attachment.ButtonClickAttachment;
 import dev.struchkov.godfather.telegram.domain.attachment.CommandAttachment;
 import dev.struchkov.godfather.telegram.main.context.MailPayload;
 import dev.struchkov.godfather.telegram.main.core.util.Attachments;
@@ -73,6 +74,11 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
                 ClientBotCommand.builder()
                         .key(Cmd.HELP)
                         .description("help in use")
+                        .build(),
+
+                ClientBotCommand.builder()
+                        .key(Cmd.SUPPORT_DEV)
+                        .description("Support project development")
                         .build()
         ));
     }
@@ -105,9 +111,19 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
                 .triggerCheck(mail -> mail.getFromPersonId().equals(appProperty.getTelegramId()))
                 .answer(message -> {
                     telegramService.executeAction(message.getFromPersonId(), ChatAction.TYPING);
+
+                    final long countMessages = chatGptService.getCountMessages(chatInfo.getChatId());
+
+                    final StringBuilder builder = new StringBuilder();
+                    builder.append("Wait... Response is being generated...\nIt might take a long time ⏳");
+
+                    if (countMessages > 40) {
+                        builder.append(Strings.escapeMarkdown("\n-- -- -- -- --\nWe recommend periodically clearing the conversation context (/clear_context). If this is not done, then the memory resources on your PC will run out."));
+                    }
+
                     final BoxAnswer answerWait = BoxAnswer.builder()
                             .recipientPersonId(message.getFromPersonId())
-                            .message("Wait... Response is being generated...\nIt might take a long time ⏳")
+                            .message(builder.toString())
                             .build();
                     telegramSending.send(answerWait);
                     final String answerText = chatGptService.sendNewMessage(chatInfo.getChatId(), message.getText());
@@ -174,6 +190,49 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
                             }
                             return BoxAnswer.builder().build();
                         }
+                )
+                .build();
+    }
+
+    @Unit(value = UnitName.SUPPORT, main = true)
+    public AnswerText<Mail> support() {
+        return AnswerText.<Mail>builder()
+                .triggerCheck(
+                        mail -> {
+                            if (mail.getFromPersonId().equals(appProperty.getTelegramId())) {
+                                final List<Attachment> attachments = mail.getAttachments();
+                                final Optional<CommandAttachment> optCommand = Attachments.findFirstCommand(attachments);
+                                if (optCommand.isPresent()) {
+                                    final CommandAttachment command = optCommand.get();
+                                    return Cmd.SUPPORT_DEV.equals(command.getCommandType());
+                                }
+
+                                final Optional<ButtonClickAttachment> optClick = Attachments.findFirstButtonClick(attachments);
+                                if (optClick.isPresent()) {
+                                    final ButtonClickAttachment click = optClick.get();
+                                    return Cmd.SUPPORT_DEV.equals(click.getRawCallBackData());
+                                }
+                            }
+                            return false;
+                        }
+                )
+                .answer(
+                        boxAnswer("""
+                                ❤️ *Support Develop*
+                                                                
+                                Sponsorship makes a project sustainable because it pays for the time of the maintainers of that project, a very scarce resource that is spent on developing new features, fixing bugs, improving stability, solving problems, and general support. *The biggest bottleneck in Open Source is time.*
+                                                                
+                                TON: `struchkov-mark.ton`
+                                                                
+                                BTC:
+                                `bc1pt49vnp43c4mktk6309zlq3020dzd0p89gc8d90zzn4sgjvck56xs0t86vy`
+                                                                
+                                ETH (USDT, DAI, USDC):
+                                `0x7668C802Bd71Be965671D4Bbb1AD90C7f7f32921`
+                                                                
+                                BNB (USDT, DAI, USDC):
+                                `0xDa41aC95f606850f2E01ba775e521Cd385AA7D03`
+                                """)
                 )
                 .build();
     }

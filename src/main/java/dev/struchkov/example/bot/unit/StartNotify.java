@@ -1,7 +1,9 @@
 package dev.struchkov.example.bot.unit;
 
 import dev.struchkov.example.bot.conf.AppProperty;
+import dev.struchkov.godfather.main.domain.keyboard.button.SimpleButton;
 import dev.struchkov.godfather.simple.domain.BoxAnswer;
+import dev.struchkov.godfather.telegram.domain.keyboard.InlineKeyBoard;
 import dev.struchkov.godfather.telegram.simple.context.service.TelegramSending;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -23,17 +25,18 @@ public class StartNotify {
         final BoxAnswer boxAnswer = BoxAnswer.builder()
                 .message(MessageFormat.format(
                         """
-                        Hello 👋
-                        Your personal ChatGPT bot has been successfully launched.
-                        
-                        Use the help command to find out about the possibilities 🚀
-                        -- -- -- -- --
-                        🤘 Version: {0}
-                        👨‍💻 Developer: [https://mark.struchkov.dev/](Struchkov Mark)
-                        💊 Docs: https://docs.struchkov.dev/chatgpt-telegram-bot
-                        """,
+                                Hello 👋
+                                Your personal ChatGPT bot has been successfully launched.
+                                                        
+                                Use the help command to find out about the possibilities 🚀
+                                -- -- -- -- --
+                                🤘 Version: {0}
+                                👨‍💻 Developer: [https://mark.struchkov.dev/](Struchkov Mark)
+                                💊 Docs: https://docs.struchkov.dev/chatgpt-telegram-bot
+                                """,
                         appProperty.getVersion()
                 ))
+                .keyBoard(InlineKeyBoard.inlineKeyBoard(SimpleButton.simpleButton("❤️ Support Develop", "support")))
                 .payload(DISABLE_WEB_PAGE_PREVIEW, true)
                 .build();
         boxAnswer.setRecipientIfNull(appProperty.getTelegramId());
