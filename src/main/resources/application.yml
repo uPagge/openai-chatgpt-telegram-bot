@@ -1,9 +1,9 @@
+app:
+  telegram-id: ${TELEGRAM_ID}
 telegram:
   bot:
     username: ${TELEGRAM_BOT_USERNAME}
     token: ${TELEGRAM_BOT_TOKEN}
-    autoresponder:
-      threads: ${AUTORESPONDER_THREADS:8}
   proxy:
     enable: ${PROXY_ENABLE:false}
     host: ${PROXY_HOST:}
