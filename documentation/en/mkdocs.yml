@@ -14,7 +14,7 @@ theme:
   name: material
   custom_dir: overrides
   language: en
-#  favicon: assets/favicon.ico
+  favicon: assets/favicon.ico
   icon:
     logo: simple/openai
     repo: fontawesome/brands/github

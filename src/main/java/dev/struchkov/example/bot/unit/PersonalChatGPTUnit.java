@@ -115,19 +115,16 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
                 .triggerCheck(mail -> {
                     if (mail.getFromPersonId().equals(appProperty.getTelegramId())) {
                         final Optional<CommandAttachment> firstCommand = Attachments.findFirstCommand(mail.getAttachments());
-                        if (firstCommand.isPresent()) {
-                            return !firstCommand.get().getCommandType().equals("/start");
-                        }
+                        return firstCommand.isEmpty();
                     }
                     return false;
                 })
                 .answer(message -> {
-                    telegramService.executeAction(message.getFromPersonId(), ChatAction.TYPING);
-
                     final long countMessages = chatGptService.getCountMessages(chatInfo.getChatId());
 
                     final StringBuilder builder = new StringBuilder();
                     builder.append("Wait... Response is being generated...\nIt might take a long time ⏳");
+                    telegramService.executeAction(message.getFromPersonId(), ChatAction.TYPING);
 
                     if (countMessages > 40) {
                         builder.append(Strings.escapeMarkdown("\n-- -- -- -- --\nWe recommend periodically clearing the conversation context (/clear_context). If this is not done, then the memory resources on your PC will run out."));
