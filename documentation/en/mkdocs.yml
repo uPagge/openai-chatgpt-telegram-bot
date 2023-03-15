@@ -1,0 +1,119 @@
+site_name: ChatGPT Telegram Bot
+site_url: https://docs.struchkov.dev/chatgpt-telegram-bot/en
+
+repo_url: https://github.com/uPagge/openai-chatgpt-telegram-bot
+repo_name: uPagge/openai-chatgpt-telegram-bot
+
+#edit_uri: edit/master/documentation/docs
+
+nav:
+  - Home:
+    - index.md
+
+theme:
+  name: material
+  custom_dir: overrides
+  language: en
+#  favicon: assets/favicon.ico
+  icon:
+    logo: simple/openai
+    repo: fontawesome/brands/github
+  palette:
+    - media: "(prefers-color-scheme)"
+      primary: deep purple
+      accent: indigo
+      scheme: default
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      primary: deep purple
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+
+  features:
+    - navigation.instant
+    - navigation.indexes
+    - navigation.sections
+    - navigation.tracking
+    - navigation.footer
+    - navigation.tabs.sticky
+    - navigation.prune
+#    - search
+#    - search.suggest
+#    - search.highlight
+#    - content.action.edit
+    - content.code.copy
+    - content.code.annotate
+    - content.tooltips
+    - toc.follow
+#    - toc.integrate
+plugins:
+  - social
+  - typeset
+  #  - blog:
+  #      blog_toc: true
+  #      post_date_format: short
+  #      post_url_format: "{slug}"
+  #      archive_toc: true
+  #      categories: false
+  #      authors: false
+  #  - optimize:
+  #      optimize_jpg_quality: 90
+#  - tags
+#  - search:
+#      lang: ru
+markdown_extensions:
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.snippets:
+      auto_append:
+        - includes/abbreviations.md
+  - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.tilde
+  - attr_list
+  - def_list
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - admonition
+  - abbr
+  - md_in_html
+  - footnotes
+  - toc:
+      toc_depth: 3
+      title: Table of content
+      permalink: ⚓︎
+
+extra_css:
+  - stylesheets/extra.css
+extra:
+  generator: false
+  analytics:
+    provider: custom
+    property: foobar
+  version:
+    provider: mike
+#  alternate:
+#    - name: Русский
+#      link: /ru/
+#      lang: ru

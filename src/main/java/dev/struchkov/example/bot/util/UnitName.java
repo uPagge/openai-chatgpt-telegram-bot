@@ -10,7 +10,8 @@ public class UnitName {
     public static final String HELP = "HELP";
     public static final String PROMPT = "PROMPT";
     public static final String ACCESS_ERROR = "ACCESS_ERROR";
-
     public static final String SUPPORT = "SUPPORT";
+    public static final String START = "START";
+
 
 }

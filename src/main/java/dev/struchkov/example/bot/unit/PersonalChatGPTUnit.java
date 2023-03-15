@@ -6,12 +6,14 @@ import dev.struchkov.example.bot.util.UnitName;
 import dev.struchkov.godfather.main.domain.annotation.Unit;
 import dev.struchkov.godfather.main.domain.content.Attachment;
 import dev.struchkov.godfather.main.domain.content.Mail;
+import dev.struchkov.godfather.main.domain.keyboard.button.SimpleButton;
 import dev.struchkov.godfather.simple.domain.BoxAnswer;
 import dev.struchkov.godfather.simple.domain.unit.AnswerText;
 import dev.struchkov.godfather.telegram.domain.ChatAction;
 import dev.struchkov.godfather.telegram.domain.ClientBotCommand;
 import dev.struchkov.godfather.telegram.domain.attachment.ButtonClickAttachment;
 import dev.struchkov.godfather.telegram.domain.attachment.CommandAttachment;
+import dev.struchkov.godfather.telegram.domain.keyboard.InlineKeyBoard;
 import dev.struchkov.godfather.telegram.main.context.MailPayload;
 import dev.struchkov.godfather.telegram.main.core.util.Attachments;
 import dev.struchkov.godfather.telegram.simple.context.service.TelegramSending;
@@ -29,6 +31,7 @@ import dev.struchkov.openai.domain.response.GptResponse;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
 
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,6 +39,7 @@ import static dev.struchkov.example.bot.util.UnitName.CLEAR_CONTEXT;
 import static dev.struchkov.example.bot.util.UnitName.GPT_UNIT;
 import static dev.struchkov.godfather.simple.domain.BoxAnswer.boxAnswer;
 import static dev.struchkov.godfather.simple.domain.BoxAnswer.replaceBoxAnswer;
+import static dev.struchkov.godfather.telegram.main.context.BoxAnswerPayload.DISABLE_WEB_PAGE_PREVIEW;
 
 @Component
 public class PersonalChatGPTUnit implements PersonUnitConfiguration {
@@ -108,7 +112,15 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
     @Unit(value = GPT_UNIT, main = true)
     public AnswerText<Mail> chatGpt() {
         return AnswerText.<Mail>builder()
-                .triggerCheck(mail -> mail.getFromPersonId().equals(appProperty.getTelegramId()))
+                .triggerCheck(mail -> {
+                    if (mail.getFromPersonId().equals(appProperty.getTelegramId())) {
+                        final Optional<CommandAttachment> firstCommand = Attachments.findFirstCommand(mail.getAttachments());
+                        if (firstCommand.isPresent()) {
+                            return !firstCommand.get().getCommandType().equals("/start");
+                        }
+                    }
+                    return false;
+                })
                 .answer(message -> {
                     telegramService.executeAction(message.getFromPersonId(), ChatAction.TYPING);
 
@@ -153,6 +165,44 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
                     chatGptService.closeChat(chatInfo.getChatId());
                     chatInfo = chatGptService.createChat();
                     return boxAnswer("\uD83E\uDDF9 Discussion context cleared successfully");
+                })
+                .build();
+    }
+
+    @Unit(value = UnitName.START, main = true)
+    public AnswerText<Mail> startMessage() {
+        return AnswerText.<Mail>builder()
+                .triggerCheck(
+                        mail -> {
+                            if (mail.getFromPersonId().equals(appProperty.getTelegramId())) {
+                                final List<Attachment> attachments = mail.getAttachments();
+                                final Optional<CommandAttachment> optCommand = Attachments.findFirstCommand(attachments);
+                                if (optCommand.isPresent()) {
+                                    final CommandAttachment command = optCommand.get();
+                                    return Cmd.START.equals(command.getCommandType());
+                                }
+                            }
+                            return false;
+                        }
+                )
+                .answer(message -> {
+                    return BoxAnswer.builder()
+                            .message(MessageFormat.format(
+                                    """
+                                            Hello 👋
+                                            Your personal ChatGPT bot has been successfully launched.
+                                                                    
+                                            Use the help command to find out about the possibilities 🚀
+                                            -- -- -- -- --
+                                            🤘 Version: {0}
+                                            👨‍💻 Developer: [Struchkov Mark](https://mark.struchkov.dev/)
+                                            💊 Docs: https://docs.struchkov.dev/chatgpt-telegram-bot
+                                            """,
+                                    appProperty.getVersion()
+                            ))
+                            .keyBoard(InlineKeyBoard.inlineKeyBoard(SimpleButton.simpleButton("❤️ Support Develop", "support")))
+                            .payload(DISABLE_WEB_PAGE_PREVIEW, true)
+                            .build();
                 })
                 .build();
     }
@@ -221,6 +271,8 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
                                 ❤️ *Support Develop*
                                                                 
                                 Sponsorship makes a project sustainable because it pays for the time of the maintainers of that project, a very scarce resource that is spent on developing new features, fixing bugs, improving stability, solving problems, and general support. *The biggest bottleneck in Open Source is time.*
+                                                   
+                                Bank card (Russia): [https://www.tinkoff.ru/cf/4iU6NB3uzqx](https://www.tinkoff.ru/cf/4iU6NB3uzqx)
                                                                 
                                 TON: `struchkov-mark.ton`
                                                                 

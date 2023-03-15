@@ -1,16 +1,18 @@
 app:
-  telegram-id: ${TELEGRAM_ID}
+  telegram-id: ${TELEGRAM_PERSON_ID}
   version: 0.0.1-SNAPShOT
 telegram:
   bot:
     username: ${TELEGRAM_BOT_USERNAME}
     token: ${TELEGRAM_BOT_TOKEN}
+    autoresponder:
+      threads: ${AUTORESPONDER_THREADS:8}
   proxy:
-    enable: ${PROXY_ENABLE:false}
-    host: ${PROXY_HOST:}
-    port: ${PROXY_PORT:}
-    type: ${PROXY_TYPE:SOCKS5}
-    user: ${PROXY_USERNAME:}
-    password: ${PROXY_PASSWORD:}
+    enable: ${TELEGRAM_PROXY_ENABLE:false}
+    host: ${TELEGRAM_PROXY_HOST:}
+    port: ${TELEGRAM_PROXY_PORT:}
+    type: ${TELEGRAM_PROXY_TYPE:SOCKS5}
+    user: ${TELEGRAM_PROXY_USERNAME:}
+    password: ${TELEGRAM_PROXY_PASSWORD:}
 openai:
   token: ${CHAT_GPT_TOKEN}
