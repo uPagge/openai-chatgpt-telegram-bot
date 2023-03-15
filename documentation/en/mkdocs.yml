@@ -58,7 +58,7 @@ theme:
 #    - toc.integrate
 plugins:
   - social
-#  - typeset
+  - typeset
   #  - blog:
   #      blog_toc: true
   #      post_date_format: short

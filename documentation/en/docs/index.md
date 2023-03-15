@@ -48,6 +48,10 @@ Enough words, let's launch your personal ChatGPT Telegram bot. 🚀
 
 ### Docker Run
 
+!!! note "Support"
+
+    The following platforms are supported: linux/amd64,linux/arm64/v8
+
 ``` bash
 docker run -it --name chatgpt-telegram-bot \
     --env TELEGRAM_BOT_TOKEN= \
@@ -76,7 +80,7 @@ docker run -it --name chatgpt-telegram-bot \
     --env TELEGRAM_PROXY_TYPE=SOCKS5 \
     --env TELEGRAM_PROXY_USERNAME= \
     --env TELEGRAM_PROXY_PASSWORD= \
-    upagge/chatgpt-telegram-bot:develop
+    upagge/chatgpt-telegram-bot:latest
 ```
 
 !!! note ""
@@ -97,7 +101,7 @@ docker run -it --name chatgpt-telegram-bot \
     services:
 
       chat-gpt:
-        image: upagge/chatgpt-telegram-bot:develop
+        image: upagge/chatgpt-telegram-bot:latest
         container_name: chatgpt-bot
         restart: always
         environment:

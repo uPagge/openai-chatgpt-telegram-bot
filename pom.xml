@@ -15,23 +15,27 @@
 
     <properties>
         <java.version>17</java.version>
-    </properties>
-    <dependencies>
 
+        <openai.api.version>0.0.1</openai.api.version>
+        <godfather.version>0.0.53</godfather.version>
+    </properties>
+
+
+    <dependencies>
         <dependency>
             <groupId>dev.struchkov.openai</groupId>
             <artifactId>openai-simple-sdk</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${openai.api.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.struchkov.openai</groupId>
             <artifactId>openai-simple-data-local</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${openai.api.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.struchkov.godfather.telegram</groupId>
             <artifactId>telegram-bot-spring-boot-starter</artifactId>
-            <version>0.0.53-SNAPSHOT</version>
+            <version>${godfather.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
