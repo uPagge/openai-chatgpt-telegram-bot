@@ -204,6 +204,6 @@ steps:
 #      path: /drone/volume/mkdocs_cache/gitlab_notification
 ---
 kind: signature
-hmac: cf1bd0800e8f6bb49dae0a6c5f607676b87d5ee713f4203f4f1ed08a17f71f68
+hmac: e7f6553e0e0ffb44294dfee170fd01441b54cd56a5f4c70638486ac37fcdf047
 
 ...

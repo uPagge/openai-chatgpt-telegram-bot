@@ -12,5 +12,6 @@ import org.springframework.stereotype.Component;
 public class AppProperty {
 
     private String telegramId;
+    private String version;
 
 }
