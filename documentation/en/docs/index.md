@@ -22,7 +22,7 @@ But seriously, the project uses your ChatGPT token to access the ChatGPT API and
 
 See for yourself how easy and convenient it is to use ChatGPT in Telegram. It is better to see once than to hear 100 times.
 
-<video controls width="450">
+<video controls>
       <source id="mp4" src="demo.mp4" type="video/mp4">
 </video>
 
