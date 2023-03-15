@@ -1,6 +1,6 @@
 app:
   telegram-id: ${TELEGRAM_PERSON_ID}
-  version: 0.0.1-SNAPShOT
+  version: 0.0.1
 telegram:
   bot:
     username: ${TELEGRAM_BOT_USERNAME}
