@@ -2,6 +2,7 @@
 title: Personal ChatGPT Telegram Bot
 hide:
 - navigation
+description: The project uses your ChatGPT token to access the ChatGPT API and let you chat with ChatGPT directly in Telegram.
 ---
 
 # Personal ChatGPT Telegram Bot
@@ -17,51 +18,103 @@ hide:
 
 But seriously, the project uses your ChatGPT token to access the ChatGPT API and let you chat with ChatGPT directly in Telegram.
 
-## Work example
+## Features
 
+See for yourself how easy and convenient it is to use ChatGPT in Telegram. It is better to see once than to hear 100 times.
 
+<video controls width="450">
+      <source id="mp4" src="demo.mp4" type="video/mp4">
+</video>
+
+### Commands
+
+`/clear_context` - Clears the conversation context. In fact, it deletes the chat and creates a new one.
+
+`/prompt your_question` - Allows you to ask a question outside the context of the main conversation.
 
 ## Privacy
 See my last name in the domain? [I'm a developer](https://mark.struchkov.dev), [blogger](https://struchkov.dev/blog/ru/), and publicly active. I don't have the benefit of getting dirty under my own name. I assure you that your data is not transferred to third parties, even I do not know about your requests to ChatGPT. You can see for yourself by examining the code, it's opensource.
 
-## Preparing
+## Let's get started
+
+Enough words, let's launch your personal ChatGPT Telegram bot. 🚀
+
+### Preparing
 
 * You must have [Docker installed](https://docs.docker.com/engine/install/). You can run the project both on the PC and on the server.
 * You must [register a bot in Telegram](https://t.me/BotFather) and get an access token.
 * You also need [ChatGPT access token](https://platform.openai.com/account/api-keys).
 * You must know your telegramId. [You can find it out here.](https://t.me/myidbot).
 
-## Docker Run
+### Docker Run
 
 ``` bash
-docker run --name chatgpt-telegram-bot upagge/chatgpt-telegram-bot:develop \
-    -e TELEGRAM_BOT_TOKEN=  \
-    -e TELEGRAM_BOT_USERNAME=  \ # (1)!
-    -e TELEGRAM_PERSON_ID=  \
-    -e CHAT_GPT_TOKEN=
+docker run -it --name chatgpt-telegram-bot \
+    --env TELEGRAM_BOT_TOKEN= \
+    --env TELEGRAM_BOT_USERNAME= \
+    --env TELEGRAM_PERSON_ID= \
+    --env CHAT_GPT_TOKEN= \
+    upagge/chatgpt-telegram-bot:develop
 ```
 
-1. Specify a name with the ending bot here, not a public name.
+!!! warning ""
 
-### Telegram Proxy
+    `TELEGRAM_BOT_USERNAME` - Specify a name with the ending bot here, not a public name.
+
+#### Telegram Proxy
 If you have Telegram blocked, you can specify proxy settings to connect.
 
 ``` bash   
-docker run --name chatgpt-telegram-bot upagge/chatgpt-telegram-bot:develop \
-    -e TELEGRAM_BOT_TOKEN=  \
-    -e TELEGRAM_BOT_USERNAME=  \
-    -e TELEGRAM_PERSON_ID=  \
-    -e CHAT_GPT_TOKEN=  \
-    -e TELEGRAM_PROXY_ENABLE=true \
-    -e TELEGRAM_PROXY_HOST= \
-    -e TELEGRAM_PROXY_PORT= \
-    -e TELEGRAM_PROXY_TYPE=SOCKS5 \ # (1)!
-    -e TELEGRAM_PROXY_USERNAME= \ # (2)!
-    -e TELEGRAM_PROXY_PASSWORD= # (2)!
+docker run -it --name chatgpt-telegram-bot \
+    --env TELEGRAM_BOT_TOKEN= \
+    --env TELEGRAM_BOT_USERNAME= \
+    --env TELEGRAM_PERSON_ID= \
+    --env CHAT_GPT_TOKEN= \
+    --env TELEGRAM_PROXY_ENABLE=true \
+    --env TELEGRAM_PROXY_HOST= \
+    --env TELEGRAM_PROXY_PORT= \
+    --env TELEGRAM_PROXY_TYPE=SOCKS5 \
+    --env TELEGRAM_PROXY_USERNAME= \
+    --env TELEGRAM_PROXY_PASSWORD= \
+    upagge/chatgpt-telegram-bot:develop
 ```
 
-1. Available options `SOCKS5`, `SOCKS4`, `HTTP`.
-2. Optional. If there is no authorization, you can leave it blank.
+!!! note ""
+
+    * Available options `SOCKS5`, `SOCKS4`, `HTTP`.
+    * Optional. If there is no authorization, you can leave it blank.
+
+### DockerCompose
+
+!!! warning ""
+
+    Don't forget to create a file with the variable `.env`.
+
+=== ":simple-docker: docker-compose.yml"
+
+    ``` yaml
+    version: '3.8'
+    services:
+
+      chat-gpt:
+        image: upagge/chatgpt-telegram-bot:develop
+        container_name: chatgpt-bot
+        restart: always
+        environment:
+          TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+          TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
+          TELEGRAM_PERSON_ID: ${TELEGRAM_PERSON_ID}
+          CHAT_GPT_TOKEN: ${CHAT_GPT_TOKEN}
+    ```
+
+=== ":material-variable: .env"
+
+    ``` text
+    TELEGRAM_BOT_TOKEN=
+    TELEGRAM_BOT_USERNAME=
+    TELEGRAM_PERSON_ID=
+    CHAT_GPT_TOKEN=
+    ```
 
 ## :heart:{ .heart } Support Develop
 
@@ -83,3 +136,7 @@ Sponsorship makes a project sustainable because it pays for the time of the main
 ??? question "What model is used?"
 
     For now the `gpt-3.5-turbo` model is used. In future versions you will be able to choose the model.
+
+## Other Questions
+
+If you don't understand something, you can ask a question here :point_down: or in a [discussion on GitHub.](https://github.com/uPagge/openai-chatgpt-telegram-bot/discussions)

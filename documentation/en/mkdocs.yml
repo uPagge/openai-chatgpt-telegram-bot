@@ -20,20 +20,21 @@ theme:
     repo: fontawesome/brands/github
   palette:
     - media: "(prefers-color-scheme)"
-      primary: deep purple
-      accent: indigo
+      primary: teal
+      accent: green
       scheme: default
       toggle:
         icon: material/brightness-auto
         name: Switch to light mode
     - media: "(prefers-color-scheme: light)"
-      primary: deep purple
+      primary: teal
       accent: indigo
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
+      primary: teal
       toggle:
         icon: material/brightness-4
         name: Switch to system preference
