@@ -98,6 +98,7 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
                     return BoxAnswer.builder()
                             .recipientPersonId(appProperty.getTelegramIds().get(0))
                             .message(messageText.toString())
+                            .payload(ENABLE_MARKDOWN)
                             .build();
                 })
                 .build();
