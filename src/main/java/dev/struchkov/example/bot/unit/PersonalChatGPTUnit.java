@@ -70,6 +70,11 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
                         .build(),
 
                 ClientBotCommand.builder()
+                        .key(Cmd.BALANCE)
+                        .description("Find out how much you spent this month.")
+                        .build(),
+
+                ClientBotCommand.builder()
                         .key(Cmd.BEHAVIOR)
                         .description("Allows you to set the initial behavior of ChatGPT.")
                         .build(),
@@ -96,7 +101,7 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
                             .append("\uD83D\uDCAC: ").append(message.getText());
 
                     return BoxAnswer.builder()
-                            .recipientPersonId(appProperty.getTelegramIds().get(0))
+                            .recipientPersonId(appProperty.getAdminTelegramIds().get(0))
                             .message(messageText.toString())
                             .payload(ENABLE_MARKDOWN)
                             .build();

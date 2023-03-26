@@ -1,4 +1,5 @@
 app:
+  admin-telegram-ids: ${ADMIN_TELEGRAM_PERSON_ID}
   telegram-ids: ${TELEGRAM_PERSON_ID}
   version: 0.0.1
 telegram:

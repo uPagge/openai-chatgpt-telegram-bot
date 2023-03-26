@@ -13,6 +13,7 @@ import java.util.List;
 @ConfigurationProperties("app")
 public class AppProperty {
 
+    private List<String> adminTelegramIds;
     private List<String> telegramIds;
     private String version;
 
