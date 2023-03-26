@@ -21,6 +21,7 @@ import java.text.MessageFormat;
 import java.util.List;
 import java.util.Optional;
 
+import static dev.struchkov.godfather.telegram.main.context.BoxAnswerPayload.DISABLE_WEB_PAGE_PREVIEW;
 import static dev.struchkov.godfather.telegram.main.context.BoxAnswerPayload.ENABLE_MARKDOWN;
 
 @Slf4j
@@ -53,8 +54,9 @@ public class InlineChoseHandler implements EventHandler<ChosenInlineQuery> {
                 telegramSending.replaceInlineMessage(
                         chosenInlineQuery.getInlineMessageId(),
                         BoxAnswer.builder()
-                                .message(MessageFormat.format("Your question to ChatGPT:\n{0}\n\nAnswer ChatGpt:\n{1}\n-- -- -- -- --\n[Launch your personal ChatGPT Telegram bot](https://docs.struchkov.dev/chatgpt-telegram-bot/en/latest/)", question, answer))
+                                .message(MessageFormat.format("Your question to ChatGPT:\n{0}\n\nAnswer ChatGpt:\n{1}\n-- -- -- -- --\n[Personal ChatGPT Telegram bot](https://docs.struchkov.dev/chatgpt-telegram-bot/en/latest/)", question, answer))
                                 .payload(ENABLE_MARKDOWN)
+                                .payload(DISABLE_WEB_PAGE_PREVIEW)
                                 .build()
                 );
             }
