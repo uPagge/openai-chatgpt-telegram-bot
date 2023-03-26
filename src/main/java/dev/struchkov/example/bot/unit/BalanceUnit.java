@@ -44,7 +44,7 @@ public class BalanceUnit implements PersonUnitConfiguration {
                         }
                 )
                 .answer(() -> {
-                    final TotalUsageResponse totalUsage = openAIClient.getTotalUsage();
+                    final TotalUsageResponse totalUsage = openAIClient.getTotalUsageInThisMount();
                     final double balance = totalUsage.getTotalUsage() / 100;
                     return boxAnswer("Used in this month: $" + balance);
                 })
