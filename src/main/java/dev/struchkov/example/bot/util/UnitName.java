@@ -12,6 +12,6 @@ public class UnitName {
     public static final String ACCESS_ERROR = "ACCESS_ERROR";
     public static final String SUPPORT = "SUPPORT";
     public static final String START = "START";
-
+    public static final String BEHAVIOR = "BEHAVIOR";
 
 }

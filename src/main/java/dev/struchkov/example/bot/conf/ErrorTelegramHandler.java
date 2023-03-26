@@ -19,13 +19,21 @@ public class ErrorTelegramHandler implements ErrorHandler {
     private final TelegramSending sending;
 
     @Override
-    public void handle(Message message, Exception e) {
+    public void handle(Message message, Throwable e) {
         log.error(e.getMessage(), e);
         final String errorMessage = escapeMarkdown(e.getMessage());
+
+        final String recipientTelegramId;
+        if (appProperty.getTelegramIds().contains(message.getFromPersonId())) {
+            recipientTelegramId = message.getFromPersonId();
+        } else {
+            recipientTelegramId = appProperty.getTelegramIds().get(0);
+        }
+
         sending.send(
                 BoxAnswer.builder()
                         .message("Error message:\n\n" + errorMessage)
-                        .recipientPersonId(appProperty.getTelegramId())
+                        .recipientPersonId(recipientTelegramId)
                         .build()
         );
     }

@@ -1,5 +1,5 @@
 app:
-  telegram-id: ${TELEGRAM_PERSON_ID}
+  telegram-ids: ${TELEGRAM_PERSON_ID}
   version: 0.0.1
 telegram:
   bot:

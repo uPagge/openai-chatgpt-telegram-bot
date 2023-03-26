@@ -19,6 +19,7 @@ import java.text.MessageFormat;
 import java.util.Optional;
 
 import static dev.struchkov.godfather.telegram.main.context.BoxAnswerPayload.DISABLE_WEB_PAGE_PREVIEW;
+import static dev.struchkov.godfather.telegram.main.context.BoxAnswerPayload.ENABLE_MARKDOWN;
 import static dev.struchkov.haiti.utils.Checker.checkNotBlank;
 
 @Slf4j
@@ -34,26 +35,29 @@ public class StartNotify {
 
     @PostConstruct
     public void sendStartNotify() {
-        final BoxAnswer boxAnswer = BoxAnswer.builder()
-                .message(MessageFormat.format(
-                        """
-                                Hello 👋
-                                Your personal ChatGPT bot has been successfully launched.
-                                                        
-                                Use the help command to find out about the possibilities 🚀
-                                -- -- -- -- --
-                                🤘 Version: {0}
-                                👨‍💻 Developer: [Struchkov Mark](https://mark.struchkov.dev/)
-                                💊 Docs: https://docs.struchkov.dev/chatgpt-telegram-bot
-                                """,
-                        appProperty.getVersion()
-                ))
-                .keyBoard(InlineKeyBoard.inlineKeyBoard(SimpleButton.simpleButton("❤️ Support Develop", "support")))
-                .payload(DISABLE_WEB_PAGE_PREVIEW, true)
-                .build();
-        boxAnswer.setRecipientIfNull(appProperty.getTelegramId());
-        sending.send(boxAnswer);
-        sendNotice();
+        for (String telegramId : appProperty.getTelegramIds()) {
+            final BoxAnswer boxAnswer = BoxAnswer.builder()
+                    .message(MessageFormat.format(
+                            """
+                                    Hello 👋
+                                    Your personal ChatGPT bot has been successfully launched.
+                                                            
+                                    Use the help command to find out about the possibilities 🚀
+                                    -- -- -- -- --
+                                    🤘 Version: {0}
+                                    👨‍💻 Developer: [Struchkov Mark](https://mark.struchkov.dev/)
+                                    💊 Docs: https://docs.struchkov.dev/chatgpt-telegram-bot
+                                    """,
+                            appProperty.getVersion()
+                    ))
+                    .keyBoard(InlineKeyBoard.inlineKeyBoard(SimpleButton.simpleButton("❤️ Support Develop", "support")))
+                    .payload(DISABLE_WEB_PAGE_PREVIEW, true)
+                    .payload(ENABLE_MARKDOWN)
+                    .build();
+            boxAnswer.setRecipientIfNull(telegramId);
+            sending.send(boxAnswer);
+            sendNotice();
+        }
     }
 
     /**
@@ -67,16 +71,19 @@ public class StartNotify {
             if (response.code() == 200) {
                 final String noticeMessage = response.body().string();
                 if (checkNotBlank(noticeMessage)) {
-                    final BoxAnswer notice = BoxAnswer.builder()
-                            .message(noticeMessage)
-                            .recipientPersonId(appProperty.getTelegramId())
-                            .payload(DISABLE_WEB_PAGE_PREVIEW, true)
-                            .build();
-                    final Optional<SentBox> optSentBox = sending.send(notice);
-                    if (optSentBox.isPresent()) {
-                        final SentBox sentBox = optSentBox.get();
-                        final String messageId = sentBox.getMessageId();
-                        telegramService.pinMessage(appProperty.getTelegramId(), messageId);
+                    for (String telegramId : appProperty.getTelegramIds()) {
+                        final BoxAnswer notice = BoxAnswer.builder()
+                                .message(noticeMessage)
+                                .recipientPersonId(telegramId)
+                                .payload(DISABLE_WEB_PAGE_PREVIEW)
+                                .payload(ENABLE_MARKDOWN)
+                                .build();
+                        final Optional<SentBox> optSentBox = sending.send(notice);
+                        if (optSentBox.isPresent()) {
+                            final SentBox sentBox = optSentBox.get();
+                            final String messageId = sentBox.getMessageId();
+                            telegramService.pinMessage(telegramId, messageId);
+                        }
                     }
                 }
             }

@@ -34,10 +34,6 @@ steps:
   - name: docker publish develop
     image: upagge/docker-buildx:latest
     environment:
-      STRUCHKOV_DOCKER_REGISTRY_TOKEN:
-        from_secret: STRUCHKOV_DOCKER_REGISTRY_TOKEN
-      STRUCHKOV_DOCKER_IMAGE_NAME:
-        from_secret: STRUCHKOV_DOCKER_IMAGE_NAME
       DOCKER_REGISTRY_TOKEN:
         from_secret: DOCKER_REGISTRY_TOKEN
       DOCKER_IMAGE_NAME:
@@ -48,10 +44,9 @@ steps:
       - name: dockersock
         path: /var/run
     commands:
-      - echo "$STRUCHKOV_DOCKER_REGISTRY_TOKEN" | docker login git.struchkov.dev --username $DOCKER_REGISTRY_USER --password-stdin
       - echo "$DOCKER_REGISTRY_TOKEN" | docker login docker.io --username $DOCKER_REGISTRY_USER --password-stdin
       - docker buildx create --use
-      - docker buildx build -f Dockerfile-develop --push --platform linux/amd64,linux/arm64/v8 -t "$DOCKER_IMAGE_NAME:develop" -t "git.struchkov.dev/$STRUCHKOV_DOCKER_IMAGE_NAME:develop" .
+      - docker buildx build -f Dockerfile-develop --push --platform linux/amd64,linux/arm64/v8 -t "$DOCKER_IMAGE_NAME:develop" .
 
 ---
 kind: pipeline
@@ -203,6 +198,6 @@ volumes:
       path: /drone/volume/mkdocs_cache/chatgpt-telegram-bot/en
 ---
 kind: signature
-hmac: 44ca201fe0ea4a7b739d9e170e0852171c5175c0128bfd3e77f7247f92db56a8
+hmac: b615ac14d736c1ff2354f10d96117108866cd0bc8d387f827ea063fbe66b418c
 
 ...

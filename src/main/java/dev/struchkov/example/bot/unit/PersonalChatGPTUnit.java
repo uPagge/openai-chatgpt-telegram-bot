@@ -1,6 +1,7 @@
 package dev.struchkov.example.bot.unit;
 
 import dev.struchkov.example.bot.conf.AppProperty;
+import dev.struchkov.example.bot.service.PersonalChatService;
 import dev.struchkov.example.bot.util.Cmd;
 import dev.struchkov.example.bot.util.UnitName;
 import dev.struchkov.godfather.main.domain.annotation.Unit;
@@ -8,6 +9,7 @@ import dev.struchkov.godfather.main.domain.content.Attachment;
 import dev.struchkov.godfather.main.domain.content.Mail;
 import dev.struchkov.godfather.main.domain.keyboard.button.SimpleButton;
 import dev.struchkov.godfather.simple.domain.BoxAnswer;
+import dev.struchkov.godfather.simple.domain.SentBox;
 import dev.struchkov.godfather.simple.domain.unit.AnswerText;
 import dev.struchkov.godfather.telegram.domain.ChatAction;
 import dev.struchkov.godfather.telegram.domain.ClientBotCommand;
@@ -24,65 +26,57 @@ import dev.struchkov.openai.context.ChatGptService;
 import dev.struchkov.openai.context.GPTClient;
 import dev.struchkov.openai.domain.chat.ChatInfo;
 import dev.struchkov.openai.domain.common.GptMessage;
+import dev.struchkov.openai.domain.message.AnswerChatMessage;
 import dev.struchkov.openai.domain.model.gpt.GPT3Model;
 import dev.struchkov.openai.domain.request.GptRequest;
 import dev.struchkov.openai.domain.response.Choice;
 import dev.struchkov.openai.domain.response.GptResponse;
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.text.MessageFormat;
 import java.util.List;
 import java.util.Optional;
 
 import static dev.struchkov.example.bot.util.UnitName.CLEAR_CONTEXT;
 import static dev.struchkov.example.bot.util.UnitName.GPT_UNIT;
 import static dev.struchkov.godfather.simple.domain.BoxAnswer.boxAnswer;
-import static dev.struchkov.godfather.simple.domain.BoxAnswer.replaceBoxAnswer;
 import static dev.struchkov.godfather.telegram.main.context.BoxAnswerPayload.DISABLE_WEB_PAGE_PREVIEW;
+import static dev.struchkov.godfather.telegram.main.context.BoxAnswerPayload.ENABLE_MARKDOWN;
+import static java.text.MessageFormat.format;
 
 @Component
+@RequiredArgsConstructor
 public class PersonalChatGPTUnit implements PersonUnitConfiguration {
 
-    private ChatInfo chatInfo;
-
+    private final PersonalChatService personalChatService;
     private final TelegramSending telegramSending;
     private final TelegramService telegramService;
     private final AppProperty appProperty;
     private final GPTClient gptClient;
     private final ChatGptService chatGptService;
 
-    public PersonalChatGPTUnit(
-            TelegramSending telegramSending,
-            TelegramService telegramService,
-            GPTClient gptClient,
-            AppProperty appProperty,
-            ChatGptService chatGptService
-    ) {
-        this.telegramSending = telegramSending;
-        this.telegramService = telegramService;
-        this.appProperty = appProperty;
-        this.gptClient = gptClient;
-        this.chatGptService = chatGptService;
-        this.chatInfo = chatGptService.createChat();
-    }
-
     @PostConstruct
     public void createCommands() {
         telegramService.addCommand(List.of(
-                ClientBotCommand.builder()
-                        .key(Cmd.CLEAR_CONTEXT)
-                        .description("Clears the discussion context. Start a conversation from the beginning")
-                        .build(),
-
                 ClientBotCommand.builder()
                         .key(Cmd.HELP)
                         .description("help in use")
                         .build(),
 
                 ClientBotCommand.builder()
+                        .key(Cmd.CLEAR_CONTEXT)
+                        .description("Clears the discussion context. Start a conversation from the beginning.")
+                        .build(),
+
+                ClientBotCommand.builder()
+                        .key(Cmd.BEHAVIOR)
+                        .description("Allows you to set the initial behavior of ChatGPT.")
+                        .build(),
+
+                ClientBotCommand.builder()
                         .key(Cmd.SUPPORT_DEV)
-                        .description("Support project development")
+                        .description("Support project development.")
                         .build()
         ));
     }
@@ -90,7 +84,7 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
     @Unit(value = UnitName.ACCESS_ERROR, main = true)
     public AnswerText<Mail> accessError() {
         return AnswerText.<Mail>builder()
-                .triggerCheck(mail -> !mail.getFromPersonId().equals(appProperty.getTelegramId()))
+                .triggerCheck(mail -> !appProperty.getTelegramIds().contains(mail.getFromPersonId()))
                 .answer(message -> {
                     final StringBuilder messageText = new StringBuilder("\uD83D\uDEA8 *Attempted unauthorized access to the bot*")
                             .append("\n-- -- -- -- --\n");
@@ -99,32 +93,32 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
                             .ifPresent(username -> messageText.append("\uD83E\uDDB9\u200D♂️: @").append(username));
 
                     messageText.append("\n")
-                            .append("\uD83D\uDCAC: ").append(message.getText())
-                            .toString();
+                            .append("\uD83D\uDCAC: ").append(message.getText());
+
                     return BoxAnswer.builder()
-                            .recipientPersonId(appProperty.getTelegramId())
+                            .recipientPersonId(appProperty.getTelegramIds().get(0))
                             .message(messageText.toString())
                             .build();
                 })
                 .build();
     }
 
-    @Unit(value = GPT_UNIT, main = true)
+    @Unit(value = GPT_UNIT, global = true)
     public AnswerText<Mail> chatGpt() {
         return AnswerText.<Mail>builder()
                 .triggerCheck(mail -> {
-                    if (mail.getFromPersonId().equals(appProperty.getTelegramId())) {
+                    if (appProperty.getTelegramIds().contains(mail.getFromPersonId())) {
                         final Optional<CommandAttachment> firstCommand = Attachments.findFirstCommand(mail.getAttachments());
                         return firstCommand.isEmpty();
                     }
                     return false;
                 })
                 .answer(message -> {
+                    final ChatInfo chatInfo = personalChatService.getChatByPersonId(message.getFromPersonId());
                     final long countMessages = chatGptService.getCountMessages(chatInfo.getChatId());
 
                     final StringBuilder builder = new StringBuilder();
                     builder.append("Wait... Response is being generated...\nIt might take a long time ⏳");
-                    telegramService.executeAction(message.getFromPersonId(), ChatAction.TYPING);
 
                     if (countMessages > 40) {
                         builder.append(Strings.escapeMarkdown("\n-- -- -- -- --\nWe recommend periodically clearing the conversation context (/clear_context). If this is not done, then the memory resources on your PC will run out."));
@@ -134,20 +128,27 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
                             .recipientPersonId(message.getFromPersonId())
                             .message(builder.toString())
                             .build();
-                    telegramSending.send(answerWait);
-                    final String answerText = chatGptService.sendNewMessage(chatInfo.getChatId(), message.getText());
-                    return replaceBoxAnswer(answerText);
+                    final Optional<SentBox> optSentBox = telegramSending.send(answerWait);
+
+                    telegramService.executeAction(message.getFromPersonId(), ChatAction.TYPING);
+
+                    final AnswerChatMessage answer = chatGptService.sendNewMessage(chatInfo.getChatId(), message.getText());
+                    if (optSentBox.isPresent()) {
+                        final SentBox sentBox = optSentBox.get();
+                        telegramSending.replaceMessage(sentBox.getPersonId(), sentBox.getMessageId(), boxAnswer(format("\uD83D\uDC47 Answer received. Request cost: {0} tokens", answer.getUsage().getTotalTokens())));
+                    }
+                    return boxAnswer(answer.getMessage());
                 })
                 .priority(5)
                 .build();
     }
 
-    @Unit(value = CLEAR_CONTEXT, main = true)
+    @Unit(value = CLEAR_CONTEXT, global = true)
     public AnswerText<Mail> clearContext() {
         return AnswerText.<Mail>builder()
                 .triggerCheck(
                         mail -> {
-                            if (mail.getFromPersonId().equals(appProperty.getTelegramId())) {
+                            if (appProperty.getTelegramIds().contains(mail.getFromPersonId())) {
                                 final List<Attachment> attachments = mail.getAttachments();
                                 final Optional<CommandAttachment> optCommand = Attachments.findFirstCommand(attachments);
                                 if (optCommand.isPresent()) {
@@ -159,19 +160,18 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
                         }
                 )
                 .answer(message -> {
-                    chatGptService.closeChat(chatInfo.getChatId());
-                    chatInfo = chatGptService.createChat();
+                    personalChatService.recreateChat(message.getFromPersonId());
                     return boxAnswer("\uD83E\uDDF9 Discussion context cleared successfully");
                 })
                 .build();
     }
 
-    @Unit(value = UnitName.START, main = true)
+    @Unit(value = UnitName.START, global = true)
     public AnswerText<Mail> startMessage() {
         return AnswerText.<Mail>builder()
                 .triggerCheck(
                         mail -> {
-                            if (mail.getFromPersonId().equals(appProperty.getTelegramId())) {
+                            if (appProperty.getTelegramIds().contains(mail.getFromPersonId())) {
                                 final List<Attachment> attachments = mail.getAttachments();
                                 final Optional<CommandAttachment> optCommand = Attachments.findFirstCommand(attachments);
                                 if (optCommand.isPresent()) {
@@ -184,7 +184,7 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
                 )
                 .answer(message -> {
                     return BoxAnswer.builder()
-                            .message(MessageFormat.format(
+                            .message(format(
                                     """
                                             Hello 👋
                                             Your personal ChatGPT bot has been successfully launched.
@@ -198,18 +198,19 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
                                     appProperty.getVersion()
                             ))
                             .keyBoard(InlineKeyBoard.inlineKeyBoard(SimpleButton.simpleButton("❤️ Support Develop", "support")))
-                            .payload(DISABLE_WEB_PAGE_PREVIEW, true)
+                            .payload(DISABLE_WEB_PAGE_PREVIEW)
+                            .payload(ENABLE_MARKDOWN)
                             .build();
                 })
                 .build();
     }
 
-    @Unit(value = UnitName.PROMPT, main = true)
+    @Unit(value = UnitName.PROMPT, global = true)
     public AnswerText<Mail> prompt() {
         return AnswerText.<Mail>builder()
                 .triggerCheck(
                         mail -> {
-                            if (mail.getFromPersonId().equals(appProperty.getTelegramId())) {
+                            if (appProperty.getTelegramIds().contains(mail.getFromPersonId())) {
                                 final List<Attachment> attachments = mail.getAttachments();
                                 final Optional<CommandAttachment> optCommand = Attachments.findFirstCommand(attachments);
                                 if (optCommand.isPresent()) {
@@ -221,19 +222,38 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
                         }
                 )
                 .answer(
-                        mail -> {
-                            final CommandAttachment promptCommand = Attachments.findFirstCommand(mail.getAttachments()).get();
+                        message -> {
+                            final CommandAttachment promptCommand = Attachments.findFirstCommand(message.getAttachments()).get();
                             final Optional<String> optPrompt = promptCommand.getArg();
                             if (optPrompt.isPresent()) {
                                 final String prompt = optPrompt.get();
+
+                                final BoxAnswer answerWait = BoxAnswer.builder()
+                                        .recipientPersonId(message.getFromPersonId())
+                                        .message("Wait... Response is being generated...\nIt might take a long time ⏳")
+                                        .build();
+                                final Optional<SentBox> optSentBox = telegramSending.send(answerWait);
+
+                                telegramService.executeAction(message.getFromPersonId(), ChatAction.TYPING);
+
                                 final GptResponse gptResponse = gptClient.execute(
                                         GptRequest.builder()
                                                 .model(GPT3Model.GPT_3_5_TURBO)
                                                 .message(GptMessage.fromUser(prompt))
                                                 .build()
                                 );
+
+                                if (optSentBox.isPresent()) {
+                                    final SentBox sentBox = optSentBox.get();
+                                    telegramSending.replaceMessage(sentBox.getPersonId(), sentBox.getMessageId(), boxAnswer(format("\uD83D\uDC47 Answer received. Request cost: {0} tokens", gptResponse.getUsage().getTotalTokens())));
+                                }
+
                                 final List<Choice> choices = gptResponse.getChoices();
-                                return boxAnswer(choices.get(choices.size() - 1).getMessage().getContent());
+                                final String answer = choices.get(choices.size() - 1).getMessage().getContent();
+                                return BoxAnswer.builder()
+                                        .message(answer)
+                                        .payload(ENABLE_MARKDOWN)
+                                        .build();
                             }
                             return BoxAnswer.builder().build();
                         }
@@ -241,12 +261,12 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
                 .build();
     }
 
-    @Unit(value = UnitName.SUPPORT, main = true)
+    @Unit(value = UnitName.SUPPORT, global = true)
     public AnswerText<Mail> support() {
         return AnswerText.<Mail>builder()
                 .triggerCheck(
                         mail -> {
-                            if (mail.getFromPersonId().equals(appProperty.getTelegramId())) {
+                            if (appProperty.getTelegramIds().contains(mail.getFromPersonId())) {
                                 final List<Attachment> attachments = mail.getAttachments();
                                 final Optional<CommandAttachment> optCommand = Attachments.findFirstCommand(attachments);
                                 if (optCommand.isPresent()) {
@@ -264,34 +284,37 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
                         }
                 )
                 .answer(
-                        boxAnswer("""
-                                ❤️ *Support Develop*
-                                                                
-                                Sponsorship makes a project sustainable because it pays for the time of the maintainers of that project, a very scarce resource that is spent on developing new features, fixing bugs, improving stability, solving problems, and general support. *The biggest bottleneck in Open Source is time.*
-                                                   
-                                Bank card (Russia): [https://www.tinkoff.ru/cf/4iU6NB3uzqx](https://www.tinkoff.ru/cf/4iU6NB3uzqx)
-                                                                
-                                TON: `struchkov-mark.ton`
-                                                                
-                                BTC:
-                                `bc1pt49vnp43c4mktk6309zlq3020dzd0p89gc8d90zzn4sgjvck56xs0t86vy`
-                                                                
-                                ETH (USDT, DAI, USDC):
-                                `0x7668C802Bd71Be965671D4Bbb1AD90C7f7f32921`
-                                                                
-                                BNB (USDT, DAI, USDC):
-                                `0xDa41aC95f606850f2E01ba775e521Cd385AA7D03`
-                                """)
+                        () -> BoxAnswer.builder()
+                                .message("""
+                                        ❤️ *Support Develop*
+                                                                        
+                                        Sponsorship makes a project sustainable because it pays for the time of the maintainers of that project, a very scarce resource that is spent on developing new features, fixing bugs, improving stability, solving problems, and general support. *The biggest bottleneck in Open Source is time.*
+                                                           
+                                        Bank card (Russia): [https://www.tinkoff.ru/cf/4iU6NB3uzqx](https://www.tinkoff.ru/cf/4iU6NB3uzqx)
+                                                                        
+                                        TON: `struchkov-mark.ton`
+                                                                        
+                                        BTC:
+                                        `bc1pt49vnp43c4mktk6309zlq3020dzd0p89gc8d90zzn4sgjvck56xs0t86vy`
+                                                                        
+                                        ETH (USDT, DAI, USDC):
+                                        `0x7668C802Bd71Be965671D4Bbb1AD90C7f7f32921`
+                                                                        
+                                        BNB (USDT, DAI, USDC):
+                                        `0xDa41aC95f606850f2E01ba775e521Cd385AA7D03`
+                                        """)
+                                .payload(ENABLE_MARKDOWN)
+                                .build()
                 )
                 .build();
     }
 
-    @Unit(value = UnitName.HELP, main = true)
+    @Unit(value = UnitName.HELP, global = true)
     public AnswerText<Mail> help() {
         return AnswerText.<Mail>builder()
                 .triggerCheck(
                         mail -> {
-                            if (mail.getFromPersonId().equals(appProperty.getTelegramId())) {
+                            if (appProperty.getTelegramIds().contains(mail.getFromPersonId())) {
                                 final List<Attachment> attachments = mail.getAttachments();
                                 final Optional<CommandAttachment> optCommand = Attachments.findFirstCommand(attachments);
                                 if (optCommand.isPresent()) {
@@ -302,7 +325,7 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
                             return false;
                         }
                 )
-                .answer(boxAnswer(Strings.escapeMarkdown("""
+                .answer(() -> boxAnswer("""
                         All correspondence is conducted within one chat. This allows ChatGPT to understand the context of the questions. The context is 100 messages (questions and answers).
                                                 
                         Available commands:
@@ -310,7 +333,7 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
                         /clear_context - Clears the conversation context. In fact, it deletes the chat and creates a new one.
                              
                         /prompt your_question - Allows you to ask a question outside the context of the main conversation.
-                        """)))
+                        """))
                 .build();
     }
 
