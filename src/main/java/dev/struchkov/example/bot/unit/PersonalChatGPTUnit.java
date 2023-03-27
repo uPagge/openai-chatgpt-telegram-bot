@@ -138,7 +138,7 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
                         final SentBox sentBox = optSentBox.get();
                         telegramSending.replaceMessage(sentBox.getPersonId(), sentBox.getMessageId(), boxAnswer(format("\uD83D\uDC47 Answer received. Request cost: {0} tokens", answer.getUsage().getTotalTokens())));
                     }
-                    return boxAnswer(answer.getMessage());
+                    return BoxAnswer.builder().payload(ENABLE_MARKDOWN).message(answer.getMessage()).build();
                 })
                 .priority(5)
                 .build();
