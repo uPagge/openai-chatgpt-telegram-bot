@@ -16,7 +16,6 @@ import dev.struchkov.godfather.telegram.domain.ClientBotCommand;
 import dev.struchkov.godfather.telegram.domain.attachment.ButtonClickAttachment;
 import dev.struchkov.godfather.telegram.domain.attachment.CommandAttachment;
 import dev.struchkov.godfather.telegram.domain.keyboard.InlineKeyBoard;
-import dev.struchkov.godfather.telegram.main.context.MailPayload;
 import dev.struchkov.godfather.telegram.main.core.util.Attachments;
 import dev.struchkov.godfather.telegram.simple.context.service.TelegramSending;
 import dev.struchkov.godfather.telegram.simple.context.service.TelegramService;
@@ -65,6 +64,21 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
                         .build(),
 
                 ClientBotCommand.builder()
+                        .key(Cmd.CHAT)
+                        .description("Create or toggle a chat room")
+                        .build(),
+
+                ClientBotCommand.builder()
+                        .key(Cmd.CLOSE_CHAT)
+                        .description("Close the current chat.")
+                        .build(),
+
+                ClientBotCommand.builder()
+                        .key(Cmd.CURRENT_CHAT)
+                        .description("Returns the name of the current chat")
+                        .build(),
+
+                ClientBotCommand.builder()
                         .key(Cmd.CLEAR_CONTEXT)
                         .description("Clears the discussion context. Start a conversation from the beginning.")
                         .build(),
@@ -80,47 +94,28 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
                         .build(),
 
                 ClientBotCommand.builder()
+                        .key(Cmd.CURRENT_BEHAVIOR)
+                        .description("Returns the current behavior description for the chat")
+                        .build(),
+
+                ClientBotCommand.builder()
+                        .key(Cmd.CLEAR_BEHAVIOR)
+                        .description("Clears the behavior settings for the current chat")
+                        .build(),
+
+                ClientBotCommand.builder()
                         .key(Cmd.SUPPORT_DEV)
                         .description("Support project development.")
                         .build()
         ));
     }
 
-    @Unit(value = UnitName.ACCESS_ERROR, main = true)
-    public AnswerText<Mail> accessError() {
-        return AnswerText.<Mail>builder()
-                .triggerCheck(mail -> !appProperty.getTelegramIds().contains(mail.getFromPersonId()))
-                .answer(message -> {
-                    final StringBuilder messageText = new StringBuilder("\uD83D\uDEA8 *Attempted unauthorized access to the bot*")
-                            .append("\n-- -- -- -- --\n");
-
-                    message.getPayLoad(MailPayload.USERNAME)
-                            .ifPresent(username -> messageText.append("\uD83E\uDDB9\u200D♂️: @").append(username));
-
-                    messageText.append("\n")
-                            .append("\uD83D\uDCAC: ").append(message.getText());
-
-                    return BoxAnswer.builder()
-                            .recipientPersonId(appProperty.getAdminTelegramIds().get(0))
-                            .message(messageText.toString())
-                            .payload(ENABLE_MARKDOWN)
-                            .build();
-                })
-                .build();
-    }
-
-    @Unit(value = GPT_UNIT, global = true)
+    @Unit(value = GPT_UNIT, main = true, global = true)
     public AnswerText<Mail> chatGpt() {
         return AnswerText.<Mail>builder()
-                .triggerCheck(mail -> {
-                    if (appProperty.getTelegramIds().contains(mail.getFromPersonId())) {
-                        final Optional<CommandAttachment> firstCommand = Attachments.findFirstCommand(mail.getAttachments());
-                        return firstCommand.isEmpty();
-                    }
-                    return false;
-                })
+                .triggerCheck(mail -> Attachments.findFirstCommand(mail.getAttachments()).isEmpty())
                 .answer(message -> {
-                    final ChatInfo chatInfo = personalChatService.getChatByPersonId(message.getFromPersonId());
+                    final ChatInfo chatInfo = personalChatService.getCurrentChat(message.getFromPersonId());
                     final long countMessages = chatGptService.getCountMessages(chatInfo.getChatId());
 
                     final StringBuilder builder = new StringBuilder();
@@ -154,19 +149,15 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
         return AnswerText.<Mail>builder()
                 .triggerCheck(
                         mail -> {
-                            if (appProperty.getTelegramIds().contains(mail.getFromPersonId())) {
-                                final List<Attachment> attachments = mail.getAttachments();
-                                final Optional<CommandAttachment> optCommand = Attachments.findFirstCommand(attachments);
-                                if (optCommand.isPresent()) {
-                                    final CommandAttachment command = optCommand.get();
-                                    return Cmd.CLEAR_CONTEXT.equals(command.getCommandType());
-                                }
-                            }
-                            return false;
+                            final List<Attachment> attachments = mail.getAttachments();
+                            final Optional<CommandAttachment> optCommand = Attachments.findFirstCommand(attachments);
+                            return optCommand.filter(commandAttachment -> Cmd.CLEAR_CONTEXT.equals(commandAttachment.getCommandType())).isPresent();
                         }
                 )
                 .answer(message -> {
-                    personalChatService.recreateChat(message.getFromPersonId());
+                    final String personId = message.getFromPersonId();
+                    final String currentChatName = personalChatService.getCurrentChatName(personId);
+                    personalChatService.clearContext(personId, currentChatName);
                     return boxAnswer("\uD83E\uDDF9 Discussion context cleared successfully");
                 })
                 .build();
@@ -177,15 +168,8 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
         return AnswerText.<Mail>builder()
                 .triggerCheck(
                         mail -> {
-                            if (appProperty.getTelegramIds().contains(mail.getFromPersonId())) {
-                                final List<Attachment> attachments = mail.getAttachments();
-                                final Optional<CommandAttachment> optCommand = Attachments.findFirstCommand(attachments);
-                                if (optCommand.isPresent()) {
-                                    final CommandAttachment command = optCommand.get();
-                                    return Cmd.START.equals(command.getCommandType());
-                                }
-                            }
-                            return false;
+                            final Optional<CommandAttachment> optCommand = Attachments.findFirstCommand(mail.getAttachments());
+                            return optCommand.filter(commandAttachment -> Cmd.START.equals(commandAttachment.getCommandType())).isPresent();
                         }
                 )
                 .answer(message -> {
@@ -216,15 +200,8 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
         return AnswerText.<Mail>builder()
                 .triggerCheck(
                         mail -> {
-                            if (appProperty.getTelegramIds().contains(mail.getFromPersonId())) {
-                                final List<Attachment> attachments = mail.getAttachments();
-                                final Optional<CommandAttachment> optCommand = Attachments.findFirstCommand(attachments);
-                                if (optCommand.isPresent()) {
-                                    final CommandAttachment command = optCommand.get();
-                                    return Cmd.PROMPT.equals(command.getCommandType());
-                                }
-                            }
-                            return false;
+                            final Optional<CommandAttachment> optCommand = Attachments.findFirstCommand(mail.getAttachments());
+                            return optCommand.filter(commandAttachment -> Cmd.PROMPT.equals(commandAttachment.getCommandType())).isPresent();
                         }
                 )
                 .answer(
@@ -272,19 +249,15 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
         return AnswerText.<Mail>builder()
                 .triggerCheck(
                         mail -> {
-                            if (appProperty.getTelegramIds().contains(mail.getFromPersonId())) {
-                                final List<Attachment> attachments = mail.getAttachments();
-                                final Optional<CommandAttachment> optCommand = Attachments.findFirstCommand(attachments);
-                                if (optCommand.isPresent()) {
-                                    final CommandAttachment command = optCommand.get();
-                                    return Cmd.SUPPORT_DEV.equals(command.getCommandType());
-                                }
+                            final List<Attachment> attachments = mail.getAttachments();
+                            final Optional<CommandAttachment> optCommand = Attachments.findFirstCommand(attachments);
+                            if (optCommand.isPresent()) {
+                                return Cmd.SUPPORT_DEV.equals(optCommand.get().getCommandType());
+                            }
 
-                                final Optional<ButtonClickAttachment> optClick = Attachments.findFirstButtonClick(attachments);
-                                if (optClick.isPresent()) {
-                                    final ButtonClickAttachment click = optClick.get();
-                                    return Cmd.SUPPORT_DEV.equals(click.getRawCallBackData());
-                                }
+                            final Optional<ButtonClickAttachment> optClick = Attachments.findFirstButtonClick(attachments);
+                            if (optClick.isPresent()) {
+                                return Cmd.SUPPORT_DEV.equals(optClick.get().getRawCallBackData());
                             }
                             return false;
                         }
@@ -320,15 +293,8 @@ public class PersonalChatGPTUnit implements PersonUnitConfiguration {
         return AnswerText.<Mail>builder()
                 .triggerCheck(
                         mail -> {
-                            if (appProperty.getTelegramIds().contains(mail.getFromPersonId())) {
-                                final List<Attachment> attachments = mail.getAttachments();
-                                final Optional<CommandAttachment> optCommand = Attachments.findFirstCommand(attachments);
-                                if (optCommand.isPresent()) {
-                                    final CommandAttachment command = optCommand.get();
-                                    return Cmd.HELP.equals(command.getCommandType());
-                                }
-                            }
-                            return false;
+                            final Optional<CommandAttachment> optCommand = Attachments.findFirstCommand(mail.getAttachments());
+                            return optCommand.filter(commandAttachment -> Cmd.HELP.equals(commandAttachment.getCommandType())).isPresent();
                         }
                 )
                 .answer(() -> boxAnswer("""

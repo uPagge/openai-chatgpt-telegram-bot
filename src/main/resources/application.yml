@@ -1,7 +1,7 @@
 app:
   admin-telegram-ids: ${ADMIN_TELEGRAM_PERSON_ID}
   telegram-ids: ${TELEGRAM_PERSON_ID}
-  version: 0.0.1
+  version: 0.1.0
 telegram:
   bot:
     username: ${TELEGRAM_BOT_USERNAME}
