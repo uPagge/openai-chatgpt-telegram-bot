@@ -18,19 +18,85 @@ description: The project uses your ChatGPT token to access the ChatGPT API and l
 
 But seriously, the project uses your ChatGPT token to access the ChatGPT API and let you chat with ChatGPT directly in Telegram.
 
-## Features
+!!! danger "Disclaimer"
+
+    This is a personal project and is not affiliated with OpenAI in any way.
+
+## Demo
 
 See for yourself how easy and convenient it is to use ChatGPT in Telegram. It is better to see once than to hear 100 times.
 
-<video controls>
+<video controls width="450">
       <source id="mp4" src="demo.mp4" type="video/mp4">
 </video>
 
+## Features
+
+Key Features:
+
+* Saving the context of a conversation
+* :new: Access can be restricted by specifying a list of allowed users.
+* :new: Support for multiple chats for one user
+* Support markdown in answers
+* :new: Ability to set behavior for the conversation, which will be preserved even when the context is cleared
+* Docker and Proxy support
+* :new: Possibility to check expenses for the current month
+* :new: Tells you how many tokens you spent to generate a response
+* :new: Support Telegram Inline Mode
+
 ### Commands
 
-`/clear_context` - Clears the conversation context. In fact, it deletes the chat and creates a new one.
+List of available commands to control the bot.
+
+#### Chat commands
+
+`/chat chat_name` - allows you to create a new chat or switch to an existing one.
+
+`/chat` - allows you to return to normal chat. Also displays a list of created chats.
+
+`/close_chat` - closes the chat room. You get to the default chat room.
+
+`/clear_context` - clears the chat context. In fact, it deletes the chat and creates a new one. The behavior is maintained, as opposed to closing the chat room.
 
 `/prompt your_question` - Allows you to ask a question outside the context of the main conversation.
+
+`/current_chat` - returns the name of the current chat.
+
+#### Behavior commands
+
+In fact, the first message at the beginning of the chat, which tells how the AI should react. It is saved when the context is cleared, but is not saved when the chat is closed.
+
+!!! note ""
+
+    These commands work within the current chat, and do not affect other chats.
+
+`/behavior behavior_description` - sets the bot's behavior for the current chat. 
+
+`/current_behavior` - get the current behavior setting for the current chat.
+
+`/clear_behavior` - removes the behavior settings for the current chat.
+
+#### Other commands
+
+`/balance` - Allows you to see the amount of money spent this month. Works only when you specify bot admins.
+
+### Inline Mode
+
+Inline mode allows you to use the bot in group chat, private chat, or in comments. Here's how it works:
+
+<video controls width="300">
+      <source id="mp4" src="inline.mp4" type="video/mp4">
+</video>
+
+But for this mode to work it needs to be set up:
+
+<video controls width="450">
+      <source id="mp4" src="inline-setting.mp4" type="video/mp4">
+</video>
+
+!!! warning "setinlinefeedback"
+
+    Be sure to activate `/setinlinefeedback`, otherwise nothing will work.
 
 ## Privacy
 See my last name in the domain? [I'm a developer](https://mark.struchkov.dev), [blogger](https://struchkov.dev/blog/ru/), and publicly active. I don't have the benefit of getting dirty under my own name. I assure you that your data is not transferred to third parties, even I do not know about your requests to ChatGPT. You can see for yourself by examining the code, it's opensource.
@@ -46,33 +112,43 @@ Enough words, let's launch your personal ChatGPT Telegram bot. 🚀
 * You also need [ChatGPT access token](https://platform.openai.com/account/api-keys).
 * You must know your telegramId. [You can find it out here.](https://t.me/myidbot).
 
+### Environment variables
+
+* `TELEGRAM_BOT_TOKEN` - The bot access token you got from GodFather. Example: 1234567890:XXX_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+* `TELEGRAM_BOT_USERNAME` - Specify a name with the ending bot here, not a public name. Example: Undusted_bot
+* `TELEGRAM_PERSON_ID` - The IDs of the users on Telegram who are allowed access. Example: 1234567, 56789045
+* `ADMIN_TELEGRAM_PERSON_ID` - The IDs of the users on Telegram who are allowed admin access. Example: 1234567
+* `CHAT_GPT_TOKEN` - OpenAI API access token.
+
 ### Docker Run
 
 !!! note "Support"
 
-    The following platforms are supported: linux/amd64,linux/arm64/v8
+    The following platforms are supported: linux/amd64, linux/arm64/v8
 
 ``` bash
 docker run -it --name chatgpt-telegram-bot \
     --env TELEGRAM_BOT_TOKEN= \
     --env TELEGRAM_BOT_USERNAME= \
     --env TELEGRAM_PERSON_ID= \
+    --env ADMIN_TELEGRAM_PERSON_ID= \
     --env CHAT_GPT_TOKEN= \
     upagge/chatgpt-telegram-bot:develop
 ```
 
-!!! warning ""
-
-    `TELEGRAM_BOT_USERNAME` - Specify a name with the ending bot here, not a public name.
-
 #### Telegram Proxy
 If you have Telegram blocked, you can specify proxy settings to connect.
+
+!!! note
+
+    Requests to OpenAI will not be made through a proxy
 
 ``` bash   
 docker run -it --name chatgpt-telegram-bot \
     --env TELEGRAM_BOT_TOKEN= \
     --env TELEGRAM_BOT_USERNAME= \
     --env TELEGRAM_PERSON_ID= \
+    --env ADMIN_TELEGRAM_PERSON_ID= \
     --env CHAT_GPT_TOKEN= \
     --env TELEGRAM_PROXY_ENABLE=true \
     --env TELEGRAM_PROXY_HOST= \
@@ -108,6 +184,7 @@ docker run -it --name chatgpt-telegram-bot \
           TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
           TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
           TELEGRAM_PERSON_ID: ${TELEGRAM_PERSON_ID}
+          ADMIN_TELEGRAM_PERSON_ID: ${ADMIN_TELEGRAM_PERSON_ID}
           CHAT_GPT_TOKEN: ${CHAT_GPT_TOKEN}
     ```
 
@@ -117,6 +194,7 @@ docker run -it --name chatgpt-telegram-bot \
     TELEGRAM_BOT_TOKEN=
     TELEGRAM_BOT_USERNAME=
     TELEGRAM_PERSON_ID=
+    ADMIN_TELEGRAM_PERSON_ID=
     CHAT_GPT_TOKEN=
     ```
 
@@ -140,6 +218,10 @@ Sponsorship makes a project sustainable because it pays for the time of the main
 ??? question "What model is used?"
 
     For now the `gpt-3.5-turbo` model is used. In future versions you will be able to choose the model.
+
+??? question "What happens if my reply is longer than the allowed number of characters in one Telegram message?"
+
+    That's okay, the answer will be broken up into several posts.
 
 ## Other Questions
 
