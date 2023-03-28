@@ -15,8 +15,8 @@
     <properties>
         <java.version>17</java.version>
 
-        <openai.api.version>0.0.2-SNAPSHOT</openai.api.version>
-        <godfather.version>0.0.54-SNAPSHOT</godfather.version>
+        <openai.api.version>0.0.2</openai.api.version>
+        <godfather.version>0.0.54</godfather.version>
 
         <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-compiler-plugin -->
         <plugin.maven.compiler.ver>3.10.1</plugin.maven.compiler.ver>
