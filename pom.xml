@@ -10,7 +10,7 @@
 
     <groupId>dev.struchkov.openai</groupId>
     <artifactId>openai-chatgpt-telegram-bot</artifactId>
-    <version>0.0.2-SNAPSHOT</version>
+    <version>0.1.0</version>
 
     <properties>
         <java.version>17</java.version>
@@ -164,7 +164,7 @@
         <connection>scm:git:ssh://git@git.struchkov.dev:222/Telegram-Bots/openai-chatgpt-telegram-bot.git</connection>
         <url>https://git.struchkov.dev/Telegram-Bots/openai-chatgpt-telegram-bot</url>
         <developerConnection>scm:git:ssh://git@git.struchkov.dev:222/Telegram-Bots/openai-chatgpt-telegram-bot.git</developerConnection>
-      <tag>HEAD</tag>
+      <tag>v.0.1.0</tag>
   </scm>
 
     <developers>
